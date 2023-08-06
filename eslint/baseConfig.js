@@ -1,23 +1,25 @@
 const prettierConfig = require('../.prettierrc')
-const configOverrides = require('./configOverrides')
-const vueOverrides = require('./vueOverrides')
-const typeScriptRules = require('./rulesets/typeScriptRules')
+const configOverrides = require('./overrides/configOverrides')
+const vueOverrides = require('./overrides/vueOverrides')
+const typescriptRules = require('./rulesets/typescriptRules')
+const jsdocRules = require('./rulesets/jsdocRules')
 
 module.exports = {
   env: {
     browser: true,
     node: true,
   },
-  plugins: ['nested-if'],
+  plugins: ['nested-if', 'eslint-plugin-vue'],
   extends: [
     'plugin:nuxt/recommended',
     'hardcore',
     'hardcore/ts',
     'hardcore/vue',
+    'plugin:jsdoc/recommended-typescript-error',
   ],
+  parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
-    parser: '@typescript-eslint/parser',
     sourceType: 'module',
     project: './tsconfig.json',
   },
@@ -50,7 +52,30 @@ module.exports = {
       // https://github.com/vitejs/vite/issues/178
       { vue: 'always' },
     ],
-    ...typeScriptRules,
+    'no-restricted-syntax': [
+      'error',
+      {
+        selector: 'CallExpression[callee.name="reactive"]',
+        message: 'use ref instead of reactive for code consistency',
+      },
+    ],
+    'max-params': ['error', { max: 1 }],
+    'unicorn/prevent-abbreviations': [
+      'error',
+      {
+        allowList: {
+          args: true,
+          props: true,
+          Props: true,
+          params: true,
+          Params: true,
+        },
+        ignore: ['\\.e2e$', '\\.e2e-spec$'],
+        checkShorthandProperties: true,
+      },
+    ],
+    ...typescriptRules,
+    ...jsdocRules,
   },
   overrides: [configOverrides, vueOverrides],
 }
